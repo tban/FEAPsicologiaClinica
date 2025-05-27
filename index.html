@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis Interactivo: FEA Psicología Clínica en el SNS Español</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Visualization & Content Choices:
+        - Psychologist Ratio: Inform -> Bar Chart (Chart.js) -> Compare Spain vs EU -> Clear visual disparity.
+        - PIR Places: Compare -> Bar Chart (Chart.js) -> Offered vs Needed -> Highlights deficit.
+        - Legal Pathways: Organize -> HTML/CSS Flow Diagram -> PEPC vs PGS paths -> Clarifies distinct routes.
+        - CCAA Issues: Inform/Compare -> Interactive List/Modal (HTML/JS) -> Show specific CCAA problems (e.g., Cataluña PNL) -> Localized context.
+        - Stakeholder Stances: Compare/Inform -> Accordion/Tabs (HTML/JS) -> ANPIR, COP, Unions -> Presents diverse views concisely.
+        - Recommendations: Organize -> Interactive List (HTML/JS) -> Key solutions -> Actionable takeaways.
+        CONFIRMING NO SVG/Mermaid. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F7F3; /* Light Beige/Off-white */
+            color: #3D3D3D; /* Dark Gray */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px; 
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .section-title {
+            font-size: 1.75rem; /* 28px */
+            font-weight: 700;
+            color: #4A7C59; /* Muted Green */
+            margin-bottom: 1.5rem; /* 24px */
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #D4A373; /* Warm Tan */
+        }
+        .subsection-title {
+            font-size: 1.25rem; /* 20px */
+            font-weight: 600;
+            color: #4A7C59; /* Muted Green */
+            margin-bottom: 1rem; /* 16px */
+        }
+        .card {
+            background-color: #FFFFFF;
+            border-radius: 0.5rem; /* 8px */
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            padding: 1.5rem; /* 24px */
+            margin-bottom: 1.5rem;
+        }
+        .accent-text {
+            color: #D4A373; /* Warm Tan */
+            font-weight: 600;
+        }
+        .primary-button {
+            background-color: #4A7C59; /* Muted Green */
+            color: #FFFFFF;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem; /* 6px */
+            transition: background-color 0.3s ease;
+        }
+        .primary-button:hover {
+            background-color: #3B6649; /* Darker Muted Green */
+        }
+        .flow-diagram-box {
+            border: 1px solid #D4A373;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            background-color: #FDFBF7;
+            text-align: center;
+        }
+        .flow-diagram-arrow {
+            font-size: 1.5rem;
+            color: #4A7C59;
+            margin: 0.5rem 0;
+            text-align: center;
+        }
+        /* Modal styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 100; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto; /* 10% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; /* Could be more or less, depending on screen size */
+            max-width: 700px;
+            border-radius: 8px;
+            position: relative;
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="antialiased leading-relaxed">
+
+    <header class="bg-[#4A7C59] text-white py-8 text-center shadow-md">
+        <div class="container mx-auto px-4">
+            <h1 class="text-3xl md:text-4xl font-bold">Crisis en la Psicología Clínica del SNS Español</h1>
+            <p class="mt-2 text-md md:text-lg opacity-90">Análisis interactivo de la escasez de especialistas FEA y la situación de los PGS</p>
+        </div>
+    </header>
+
+    <nav class="sticky top-0 bg-[#F8F7F3] shadow-sm z-50 hidden md:block">
+        <div class="container mx-auto px-4">
+            <ul class="flex justify-center space-x-6 py-3 text-sm">
+                <li><a href="#overview" class="text-[#4A7C59] hover:text-[#D4A373] font-semibold">Panorama</a></li>
+                <li><a href="#legal-framework" class="text-[#4A7C59] hover:text-[#D4A373] font-semibold">Marco Legal</a></li>
+                <li><a href="#ccaa-situation" class="text-[#4A7C59] hover:text-[#D4A373] font-semibold">CCAA</a></li>
+                <li><a href="#pgs-reality" class="text-[#4A7C59] hover:text-[#D4A373] font-semibold">Realidad PGS</a></li>
+                <li><a href="#stakeholders" class="text-[#4A7C59] hover:text-[#D4A373] font-semibold">Voces</a></li>
+                <li><a href="#solutions" class="text-[#4A7C59] hover:text-[#D4A373] font-semibold">Soluciones</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-8">
+
+        <section id="overview" class="card">
+            <h2 class="section-title">Panorama General: Una Urgencia Nacional</h2>
+            <p class="mb-4">El Sistema Nacional de Salud (SNS) español enfrenta un desafío crítico: una creciente demanda de atención en salud mental se topa con una escasez alarmante de Psicólogos Especialistas en Psicología Clínica (PEPC), la figura con la titulación oficial requerida. Esta situación ha llevado a prácticas de contratación controvertidas, como el empleo de Psicólogos Generales Sanitarios (PGS) en plazas destinadas a especialistas, un fenómeno que se extiende por diversas comunidades autónomas y que analizaremos en detalle.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="subsection-title">Ratio de Psicólogos en el SNS</h3>
+                    <div class="chart-container" style="height:250px; max-height:300px;">
+                        <canvas id="ratioPsicologosChart"></canvas>
+                    </div>
+                    <p class="text-xs text-center mt-2">Comparativa de la ratio de psicólogos por 100.000 habitantes en el SNS español frente a la media europea.</p>
+                </div>
+                <div>
+                    <h3 class="subsection-title">Plazas PIR: Oferta vs. Necesidad</h3>
+                    <div class="chart-container" style="height:250px; max-height:300px;">
+                        <canvas id="pirPlazasChart"></canvas>
+                    </div>
+                    <p class="text-xs text-center mt-2">Comparativa entre plazas PIR ofertadas (2024/25) y las estimadas como necesarias anualmente.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="legal-framework" class="card">
+            <h2 class="section-title">El Laberinto Legal: Normativa y Competencias</h2>
+            <p class="mb-4">La Ley 44/2003 de Ordenación de las Profesiones Sanitarias (LOPS) es taxativa: para ejercer como especialista en el SNS, se requiere el título oficial correspondiente. En Psicología Clínica, este se obtiene exclusivamente vía Residencia (PIR).</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="bg-[#FDFBF7] p-4 rounded border border-[#D4A373]">
+                    <h4 class="font-semibold text-[#4A7C59] mb-1">LOPS y Título Especialista</h4>
+                    <p class="text-sm">Exige título oficial para plazas FEA. Responsabilidad de las AAPP de verificarlo.</p>
+                </div>
+                <div class="bg-[#FDFBF7] p-4 rounded border border-[#D4A373]">
+                    <h4 class="font-semibold text-[#4A7C59] mb-1">Sistema PIR Exclusivo</h4>
+                    <p class="text-sm">Única vía oficial (4 años) para ser Psicólogo Especialista en Psicología Clínica.</p>
+                </div>
+                <div class="bg-[#FDFBF7] p-4 rounded border border-[#D4A373]">
+                    <h4 class="font-semibold text-[#4A7C59] mb-1">Anulación DA6 LOPS</h4>
+                    <p class="text-sm">El TS suprimió en 2010 la disposición que permitía provisionalmente a no especialistas ejercer funciones sanitarias.</p>
+                </div>
+            </div>
+            
+            <h3 class="subsection-title mt-6 mb-3 text-center">Rutas Formativas y Habilitación en el SNS</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <h4 class="font-semibold text-lg text-center mb-2 text-[#4A7C59]">Psicólogo Especialista (PEPC/FEA)</h4>
+                    <div class="space-y-2">
+                        <div class="flow-diagram-box">Grado en Psicología</div>
+                        <div class="flow-diagram-arrow">↓</div>
+                        <div class="flow-diagram-box">Acceso y Superación PIR (4 años)</div>
+                        <div class="flow-diagram-arrow">↓</div>
+                        <div class="flow-diagram-box">Título de Especialista en Psicología Clínica</div>
+                        <p class="text-xs text-center mt-1">Plenamente habilitado para cartera de servicios comunes del SNS.</p>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-lg text-center mb-2 text-[#D4A373]">Psicólogo General Sanitario (PGS)</h4>
+                    <div class="space-y-2">
+                        <div class="flow-diagram-box">Grado en Psicología</div>
+                        <div class="flow-diagram-arrow">↓</div>
+                        <div class="flow-diagram-box">Máster en Psicología General Sanitaria (MPGS)</div>
+                        <div class="flow-diagram-arrow">↓</div>
+                        <div class="flow-diagram-box">Título de Psicólogo General Sanitario</div>
+                        <p class="text-xs text-center mt-1">Competencias limitadas en SNS: <span class="font-bold">NO</span> puede realizar prestaciones de la cartera de servicios comunes.</p>
+                    </div>
+                </div>
+            </div>
+             <p class="text-sm mt-4 text-center">Esta distinción es clave: la contratación de PGS en plazas FEA contraviene la normativa.</p>
+        </section>
+
+        <section id="ccaa-situation" class="card">
+            <h2 class="section-title">Realidad en las CCAA: Un Desafío Extendido</h2>
+            <p class="mb-4">La contratación de psicólogos sin la especialidad clínica para puestos FEA no es exclusiva de Canarias. Diversas CCAA enfrentan esta disyuntiva, adoptando medidas que generan controversia.</p>
+            <div id="ccaa-details-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                </div>
+        </section>
+        
+        <div id="ccaaModal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" onclick="closeModal('ccaaModal')">&times;</span>
+                <h3 id="modalTitle" class="subsection-title mb-2"></h3>
+                <p id="modalText" class="text-sm"></p>
+            </div>
+        </div>
+
+        <section id="pgs-reality" class="card">
+            <h2 class="section-title">La Realidad de los PGS en Plazas FEA</h2>
+            <p class="mb-4">Los Psicólogos Generales Sanitarios contratados en plazas de especialista se enfrentan a una notable precariedad e inestabilidad laboral, a pesar de su crucial labor.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-[#FDFBF7] p-4 rounded border border-[#D4A373]">
+                    <h4 class="font-semibold text-[#D4A373] mb-1">Irregularidad Legal</h4>
+                    <p class="text-sm">Contratación sin respaldo legal sólido tras anulación de DA6. No habilitados para funciones de cartera de servicios comunes del SNS.</p>
+                </div>
+                <div class="bg-[#FDFBF7] p-4 rounded border border-[#D4A373]">
+                    <h4 class="font-semibold text-[#D4A373] mb-1">Precariedad Laboral</h4>
+                    <ul class="list-disc list-inside text-sm space-y-1">
+                        <li>Contratos temporales o de interinidad.</li>
+                        <li>Incertidumbre y falta de estabilidad.</li>
+                        <li>Riesgo de abuso de temporalidad (Sentencias TJUE).</li>
+                        <li>Impacto en la salud mental del profesional.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="stakeholders" class="card">
+            <h2 class="section-title">Voces del Sector: Posicionamientos Clave</h2>
+            <div id="accordionContainer">
+            </div>
+        </section>
+
+        <section id="solutions" class="card">
+            <h2 class="section-title">Hacia Soluciones Sostenibles: Conclusiones y Recomendaciones</h2>
+            <p class="mb-4">La situación actual exige medidas urgentes y coordinadas para garantizar una atención en salud mental de calidad y proteger a los profesionales. El informe concluye con las siguientes recomendaciones clave:</p>
+            <ul class="list-disc list-inside space-y-3 pl-5">
+                <li><span class="font-semibold text-[#4A7C59]">Incremento Sustancial de Plazas PIR:</span> Aumentar la oferta anual para cubrir la demanda real de especialistas.</li>
+                <li><span class="font-semibold text-[#4A7C59]">Revisión y Clarificación del Marco Legal:</span> Definir con precisión el rol de los PGS en el SNS, evitando el limbo legal.</li>
+                <li><span class="font-semibold text-[#4A7C59]">Mejora de Condiciones Laborales en el SNS:</span> Ofrecer contratos estables y dignos para atraer y retener talento.</li>
+                <li><span class="font-semibold text-[#4A7C59]">Planificación Estratégica de RRHH:</span> Anticipar necesidades a medio y largo plazo en salud mental.</li>
+                <li><span class="font-semibold text-[#4A7C59]">Fortalecimiento de la Atención Primaria:</span> Invertir en psicología en AP para detección temprana y reducir presión sobre especializada.</li>
+            </ul>
+        </section>
+
+    </main>
+
+    <footer class="text-center py-6 bg-[#3D3D3D] text-[#F8F7F3] text-xs">
+        <p>Análisis Interactivo SPA. Basado en el informe "Situación FEA Psicología Clínica en España".</p>
+        <p>&copy; 2025. Contenido con fines informativos. No constituye asesoramiento legal.</p>
+    </footer>
+
+    <script>
+        // Data for CCAA section
+        const ccaaData = [
+            { 
+                name: "Canarias", 
+                details: "Exigencia formal de título especialista (PIR) para FEA Psicología Clínica. Múltiples convocatorias declaradas desiertas por falta de especialistas. Contratación de PGS en estas plazas, situación legalmente cuestionable debido a la anulación de la DA6 y las limitaciones competenciales de los PGS en el SNS.",
+                icon: "🇮🇨"
+            },
+            { 
+                name: "Andalucía", 
+                details: "Normativa permite al SAS contratar psicólogos sin especialidad para funciones clínicas, medida impugnada por ANPIR. Simultáneamente, convoca plazas FEA que requieren título especialista.",
+                icon: "🇪🇸"
+            },
+            { 
+                name: "Cataluña", 
+                details: "Uso de PNL para 'normalizar' contrataciones de PGS en SNS ante falta de especialistas. El COPC apoya la inclusión de PGS, generando debate profesional.",
+                icon: "🏛️"
+            },
+            { 
+                name: "C. Valenciana", 
+                details: "'Guerra legislativa' sobre contratación de psicólogos con máster sin PIR. A pesar de ello, convoca plazas FEA exigiendo título especialista.",
+                icon: "🍊"
+            },
+            { 
+                name: "Madrid y Cantabria", 
+                details: "Continúan publicando OPEs para FEA Psicología Clínica especificando la necesidad del título de especialista, aunque la presión por escasez es generalizada.",
+                icon: "🏙️"
+            }
+        ];
+
+        // Data for Stakeholders Accordion
+        const stakeholderData = [
+            {
+                title: "ANPIR (Sociedad Española de Psicología Clínica)",
+                content: "Postura firme y crítica. Denuncia contrataciones 'anómalas' de PGS en el SNS, considerándolas un riesgo para la atención. Aboga por el incremento de plazas PIR como única solución sostenible y de calidad, rechazando 'soluciones cortoplacistas'."
+            },
+            {
+                title: "Consejo General de la Psicología (COP)",
+                content: "Resalta la escasez de especialistas en el SNS y las largas listas de espera. Señala desajustes en ratios con la UE. Algunas delegaciones territoriales (ej. COPC en Cataluña) apoyan la inclusión de PGS, mostrando diversidad de criterios internos ante la necesidad urgente."
+            },
+            {
+                title: "Sindicatos Sanitarios",
+                content: "Denuncian la escasez de profesionales y la precariedad laboral general en el SNS, incluyendo la falta de psicólogos. Abogan por el cumplimiento legal en contrataciones y la mejora de condiciones, enfocándose en el aumento de plazas PIR y la estabilización del empleo."
+            }
+        ];
+        
+        function openModal(title, text) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalText').innerText = text;
+            document.getElementById('ccaaModal').style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Close modal if user clicks outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById('ccaaModal');
+            if (event.target == modal) {
+                closeModal('ccaaModal');
+            }
+        }
+
+        // Function to create CCAA items
+        function populateCcaaDetails() {
+            const container = document.getElementById('ccaa-details-container');
+            container.innerHTML = ''; // Clear existing
+            ccaaData.forEach(ccaa => {
+                const div = document.createElement('div');
+                div.className = 'bg-[#FDFBF7] p-4 rounded border border-[#D4A373] cursor-pointer hover:shadow-lg transition-shadow';
+                div.innerHTML = `<h4 class="font-semibold text-[#4A7C59] mb-1 text-md">${ccaa.icon} ${ccaa.name}</h4>
+                                 <p class="text-xs line-clamp-3">${ccaa.details.substring(0,100)}...</p>`;
+                div.onclick = () => openModal(ccaa.name, ccaa.details);
+                container.appendChild(div);
+            });
+        }
+        
+        // Accordion functionality
+        function createAccordion() {
+            const container = document.getElementById('accordionContainer');
+            container.innerHTML = ''; 
+            stakeholderData.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'mb-2 border border-[#D4A373] rounded';
+                
+                const button = document.createElement('button');
+                button.className = 'w-full text-left p-3 bg-[#FDFBF7] hover:bg-[#efeae3] font-semibold text-[#4A7C59] flex justify-between items-center transition-colors';
+                button.innerHTML = `<span>${item.title}</span><span class="accordion-icon text-xl transform transition-transform duration-300">+</span>`;
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'accordion-content p-3 text-sm bg-white border-t border-[#D4A373] transition-all duration-500 ease-in-out max-h-0 overflow-hidden';
+                contentDiv.innerHTML = `<p>${item.content}</p>`;
+                
+                button.onclick = () => {
+                    const isOpen = contentDiv.style.maxHeight && contentDiv.style.maxHeight !== "0px";
+                    document.querySelectorAll('.accordion-content').forEach(el => {
+                        el.style.maxHeight = "0px";
+                        el.previousElementSibling.querySelector('.accordion-icon').innerHTML = "+";
+                        el.previousElementSibling.querySelector('.accordion-icon').classList.remove('rotate-45');
+
+                    });
+                     document.querySelectorAll('.accordion-button').forEach(btn => {
+                        btn.classList.remove('bg-[#efeae3]');
+                    });
+
+                    if (!isOpen) {
+                        contentDiv.style.maxHeight = contentDiv.scrollHeight + "px";
+                        button.querySelector('.accordion-icon').innerHTML = "-";
+                        button.querySelector('.accordion-icon').classList.add('rotate-45');
+                        button.classList.add('bg-[#efeae3]');
+                    }
+                };
+                
+                div.appendChild(button);
+                div.appendChild(contentDiv);
+                container.appendChild(div);
+            });
+        }
+
+        // Chart.js label wrapping function
+        function wrapChartLabels(label, maxWidth) {
+            if (typeof label !== 'string') return label;
+            if (label.length <= maxWidth) return label;
+
+            const words = label.split(' ');
+            const lines = [];
+            let currentLine = '';
+            for (const word of words) {
+                if ((currentLine + word).length > maxWidth && currentLine.length > 0) {
+                    lines.push(currentLine.trim());
+                    currentLine = '';
+                }
+                currentLine += word + ' ';
+            }
+            if (currentLine.trim().length > 0) {
+                 lines.push(currentLine.trim());
+            }
+            return lines.length > 0 ? lines : [label]; // Ensure it always returns an array if modified, or original string
+        }
+        
+        // Tooltip configuration for Chart.js
+        const chartTooltipCallbacks = {
+            title: function(tooltipItems) {
+                const item = tooltipItems[0];
+                if (!item) return '';
+                let label = item.chart.data.labels[item.dataIndex];
+                return Array.isArray(label) ? label.join(' ') : label;
+            }
+        };
+
+        // Chart for Psychologist Ratios
+        const ratioPsicologosCtx = document.getElementById('ratioPsicologosChart').getContext('2d');
+        new Chart(ratioPsicologosCtx, {
+            type: 'bar',
+            data: {
+                labels: [wrapChartLabels('SNS España', 16), wrapChartLabels('Media Europea', 16)],
+                datasets: [{
+                    label: 'Psicólogos por 100.000 habitantes',
+                    data: [5.58, 18], // Using 5.58 as one of the reported figures
+                    backgroundColor: ['#D4A373', '#4A7C59'],
+                    borderColor: ['#b88a5f', '#3b6649'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                scales: {
+                    x: { beginAtZero: true, title: { display: true, text: 'Ratio' } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    title: { display: true, text: 'Ratio Psicólogos (SNS vs EU)' },
+                    tooltip: { callbacks: chartTooltipCallbacks }
+                }
+            }
+        });
+
+        // Chart for PIR Places
+        const pirPlazasCtx = document.getElementById('pirPlazasChart').getContext('2d');
+        new Chart(pirPlazasCtx, {
+            type: 'bar',
+            data: {
+                labels: [wrapChartLabels('Plazas PIR Ofertadas (2024/25)', 16), wrapChartLabels('Plazas PIR Necesarias (Estimación Anual)', 16)],
+                datasets: [{
+                    label: 'Número de Plazas',
+                    data: [274, 422],
+                    backgroundColor: ['#D4A373', '#4A7C59'],
+                    borderColor: ['#b88a5f', '#3b6649'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: 'Nº Plazas' } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    title: { display: true, text: 'Plazas PIR: Oferta vs. Necesidad' },
+                    tooltip: { callbacks: chartTooltipCallbacks }
+                }
+            }
+        });
+        
+        // Smooth scrolling for nav links
+        document.querySelectorAll('nav a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    // Calculate position of target element relative to the viewport, considering sticky nav height
+                    const navHeight = document.querySelector('nav').offsetHeight;
+                    const elementPosition = targetElement.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - navHeight;
+        
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: "smooth"
+                    });
+                }
+            });
+        });
+
+        // Populate dynamic content on load
+        window.onload = () => {
+            populateCcaaDetails();
+            createAccordion();
+        };
+
+    </script>
+</body>
+</html>
